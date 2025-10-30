@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* Ajustes leves e neutros; sem forçar dark e sem centralizar tudo */
+:root {
+  color-scheme: light;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f8fafc; /* slate-50 */
+  color: #0f172a;      /* slate-900 */
+}
+
+/* Paleta / util */
+/* Paleta usada nos degradês (mesmas cores do fundo) */
+:root{
+  --azul:#00a3ff;
+  --ciano:#00e5cf;
+  --amarelo:#ffd400;
+  --rosa:#ff2b8a;
+  --laranja:#ff7a00;
+}
+:root{
+  --azul:#00AEEF;
+  --amarelo:#FFD100;
+  --rosa:#FF3EA5;
+  --ciano:#06B6D4;
+  --verde:#00C853;
+  --magenta:#FF006E;
+}
+
+/* Fundo abstrato vibrante com ondas (SVG embutido) */
+.bg-carnaval-vibrante{
+  min-height:100vh;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1024' preserveAspectRatio='xMidYMid slice'>\
+  <rect width='1440' height='1024' fill='%23ffd400'/>\
+  <path fill='%2300e5cf' d='M0,180 C220,250 420,120 690,180 C980,245 1160,110 1440,160 L1440,0 L0,0 Z'/>\
+  <path fill='%2300a3ff' d='M0,360 C260,420 460,300 760,360 C1040,420 1200,300 1440,340 L1440,160 L0,160 Z'/>\
+  <path fill='%23ff2b8a' d='M1440,0 L1440,520 C1260,460 1140,540 980,600 C780,676 640,760 520,1024 L1440,1024 L1440,0 Z'/>\
+  <path fill='%23ff7a00' d='M0,1024 L0,720 C240,760 420,690 600,650 C840,596 1040,640 1440,720 L1440,1024 Z'/>\
+</svg>");
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+
+/* Leve véu para legibilidade (ajuste a opacidade se quiser) */
+.bg-carnaval-vibrante::after{
+  content:"";
+  position:fixed; inset:0; pointer-events:none;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: saturate(1.05);
+}
+
+.nav-card{
+  background-size: auto;                 /* não vamos animar posição */
+  transition: transform .15s ease;
+  background-blend-mode: screen, multiply, normal;
+  filter: saturate(1.05);
+}
+.nav-card:hover{
+  transform: translateY(-1px);
+}
+
+
