@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
 import { GoEye, GoEyeClosed, GoLock, GoPerson } from "react-icons/go";
 
 export default function Login() {
-  const { login, error } = useAuth();
+  const { login, error, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/admin";
   const [form, setForm] = useState({ username: "", password: "" });
   const [show, setShow] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const disabled = submitting || loading || !form.username || !form.password;
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -17,7 +22,9 @@ export default function Login() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await login(form.username.trim(), form.password);
+      const ok = await login(form.username.trim(), form.password);
+      if (ok) navigate(from, { replace: true });
+      // se não ok, o AuthContext já preenche `error`
     } finally {
       setSubmitting(false);
     }
@@ -26,11 +33,7 @@ export default function Login() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
-      style={{
-        /* Fundo no estilo do site */
-        background:
-          "linear-gradient(180deg, #fff 0%, #fff 50%, #fff 60%)",
-      }}
+      style={{ background: "linear-gradient(180deg, #fff 0%, #fff 50%, #fff 60%)" }}
     >
       {/* camadas de cor (radiais) */}
       <div
@@ -47,12 +50,8 @@ export default function Login() {
         }}
       />
 
-      <div
-        className="w-full max-w-md rounded-2xl border border-black/10 shadow-[0_18px_50px_rgba(0,0,0,.18)] bg-white/80 backdrop-blur p-6"
-      >
-        <h1 className="text-xl font-semibold text-slate-900 mb-4">
-          Entrar
-        </h1>
+      <div className="w-full max-w-md rounded-2xl border border-black/10 shadow-[0_18px_50px_rgba(0,0,0,.18)] bg-white/80 backdrop-blur p-6">
+        <h1 className="text-xl font-semibold text-slate-900 mb-4">Entrar</h1>
 
         <form onSubmit={submit} className="grid gap-3">
           <label className="text-xs text-slate-600">Usuário</label>
@@ -102,18 +101,14 @@ export default function Login() {
           )}
 
           <button
-            disabled={submitting}
+            disabled={disabled}
             className="mt-3 w-full rounded-lg text-white py-2 font-medium shadow hover:opacity-95 disabled:opacity-60"
-            style={{
-              background: "linear-gradient(90deg, var(--laranja), var(--rosa))",
-            }}
+            style={{ background: "linear-gradient(90deg, var(--laranja), var(--rosa))" }}
           >
-            {submitting ? "Entrando…" : "Entrar"}
+            {submitting || loading ? "Entrando…" : "Entrar"}
           </button>
 
-          <p className="text-[11px] text-slate-500 mt-2">
-            Acesso restrito ao administrador.
-          </p>
+          <p className="text-[11px] text-slate-500 mt-2">Acesso restrito ao administrador.</p>
         </form>
       </div>
     </div>
