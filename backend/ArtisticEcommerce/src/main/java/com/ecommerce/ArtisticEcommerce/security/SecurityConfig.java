@@ -1,58 +1,64 @@
 package com.ecommerce.ArtisticEcommerce.security;
 
-import org.springframework.security.config.Customizer;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.*;
+
+import java.util.List;
 
 @Configuration
-@EnableMethodSecurity // importante para @PreAuthorize
+@EnableMethodSecurity
 public class SecurityConfig {
 
+    // BCrypt para hash de senha
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                    // público
-                    .requestMatchers("/", "/products/**", "/track/**").permitAll()
-                    // swagger (se tiver)
-                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                    // painel admin
-                    .requestMatchers("/admin/**").hasRole("ADMIN")
-                    // qualquer outra requisição precisa de auth
-                    .anyRequest().authenticated()
-            )
-            .httpBasic(Customizer.withDefaults())
-            .formLogin(form -> form.disable()); // se quiser form, troca isso
+    public BCryptPasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+
+    // Usa o serviço que lê do banco
+    @Bean
+    public DaoAuthenticationProvider authProvider(UserDetailsService uds, BCryptPasswordEncoder enc) {
+        DaoAuthenticationProvider p = new DaoAuthenticationProvider();
+        p.setUserDetailsService(uds);
+        p.setPasswordEncoder(enc);
+        return p;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, DaoAuthenticationProvider authProvider) throws Exception {
+        http.csrf(csrf -> csrf.disable());
+        http.cors(Customizer.withDefaults());
+        http.authenticationProvider(authProvider);
+
+        http.authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers(org.springframework.http.HttpMethod.POST, "/track/event").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+            .requestMatchers("/admin/**", "/error").permitAll()
+            .anyRequest().authenticated()
+        );
+
+        http.httpBasic(Customizer.withDefaults());
         return http.build();
     }
 
+    // CORS p/ Vite
     @Bean
-    public UserDetailsService users(
-            @Value("${app.admin.user}") String username,
-            @Value("${app.admin.password}") String rawPassword,
-            PasswordEncoder encoder) {
-
-        UserDetails admin = User.withUsername(username)
-                .password(encoder.encode(rawPassword))
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration c = new CorsConfiguration();
+        c.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173"));
+        c.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        c.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","Origin","X-Requested-With"));
+        c.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource s = new UrlBasedCorsConfigurationSource();
+        s.registerCorsConfiguration("/**", c);
+        return s;
     }
 }
