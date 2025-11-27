@@ -4,67 +4,6 @@ import logo from "./assets/logo.png";
 import { listProducts, listCarouselPublic } from "./lib/api";
 import { trackPageview, trackClick } from "./lib/analytics";
 
-// ---------------- MOCKS PARA QUANDO NÃO HOUVER BACKEND ----------------
-
-// imagens fixas para o carrossel público
-const HERO_FALLBACK_IMAGES = [
-  "https://images.pexels.com/photos/3137890/pexels-photo-3137890.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  "https://images.pexels.com/photos/102127/pexels-photo-102127.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  "https://images.pexels.com/photos/3694710/pexels-photo-3694710.jpeg?auto=compress&cs=tinysrgb&w=1600",
-];
-
-// produtos de exemplo para a vitrine / loja
-const MOCK_PRODUCTS = [
-  {
-    id: 1,
-    name: 'Imagem Modelo',
-    description: "Peça em cerâmica esmaltada inspirada nas ondas do litoral nordestino.",
-    price: 320,
-    imageUrl:
-      "https://images.pexels.com/photos/279321/pexels-photo-279321.jpeg?auto=compress&cs=tinysrgb&w=900",
-  },
-  {
-    id: 2,
-    name: 'Imagem Modelo',
-    description: "Totem decorativo em concreto e metal, edição limitada.",
-    price: 540,
-    imageUrl:
-      "https://images.pexels.com/photos/290120/pexels-photo-290120.jpeg?auto=compress&cs=tinysrgb&w=900",
-  },
-  {
-    id: 3,
-    name: "Imagem Modelo",
-    description: "Escultura em bronze patinado, peça única.",
-    price: 890,
-    imageUrl:
-      "https://images.pexels.com/photos/208112/pexels-photo-208112.jpeg?auto=compress&cs=tinysrgb&w=900",
-  },
-  {
-    id: 4,
-    name: "Imagem Modelo",
-    description: "Conjunto com 3 mini esculturas modernas para prateleira.",
-    price: 260,
-    imageUrl:
-      "https://images.pexels.com/photos/34939913/pexels-photo-34939913.jpeg",
-  },
-  {
-    id: 5,
-    name: "Imagem Modelo",
-    description: "Peça em madeira e corda, ideal para destaque na sala.",
-    price: 410,
-    imageUrl:
-      "https://images.pexels.com/photos/34929001/pexels-photo-34929001.jpeg",
-  },
-  {
-    id: 6,
-    name: "Imagem Modelo",
-    description: "Vaso decorativo esculpido à mão, acabamento fosco.",
-    price: 190,
-    imageUrl:
-      "https://images.pexels.com/photos/374139/pexels-photo-374139.jpeg?auto=compress&cs=tinysrgb&w=900",
-  },
-];
-
 export default function App() {
   const grupos = [
     {
@@ -102,7 +41,6 @@ export default function App() {
 
   // --- Carrossel (dinâmico do backend) ---
   const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
-
   const normalizeUrl = (u) => {
     if (!u) return u;
     if (u.startsWith("/uploads/")) return `${API_BASE}${u}`;
@@ -117,7 +55,11 @@ export default function App() {
             .filter((s) => s.active !== false)
             .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
             .map((s) => normalizeUrl(s.url))
-        : HERO_FALLBACK_IMAGES,
+        : [
+            "https://picsum.photos/seed/recife-1/1600/600",
+            "https://picsum.photos/seed/recife-2/1600/600",
+            "https://picsum.photos/seed/recife-3/1600/600",
+          ],
     [slides]
   );
 
@@ -131,10 +73,10 @@ export default function App() {
   const loadSlides = async () => {
     try {
       const data = await listCarouselPublic();
-      // se a API não devolver nada útil, cai nos mocks
-      setSlides(Array.isArray(data) && data.length > 0 ? data : []);
+      // LINHA CORRIGIDA AQUI
+      setSlides(Array.isArray(data) ? data : []);
     } catch {
-      setSlides([]); // usa HERO_FALLBACK_IMAGES
+      setSlides([]);
     }
   };
 
@@ -195,16 +137,10 @@ export default function App() {
     setLoading(true);
     try {
       const data = await listProducts();
-
-      if (Array.isArray(data) && data.length > 0) {
-        setProducts(data);
-      } else {
-        // sem dados reais → usa mock
-        setProducts(MOCK_PRODUCTS);
-      }
+      setProducts(Array.isArray(data) ? data : []);
     } catch (e) {
-      console.error("Erro buscando produtos, usando mocks:", e);
-      setProducts(MOCK_PRODUCTS);
+      console.error(e);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -239,7 +175,8 @@ export default function App() {
       {/* HERO */}
       <section className="relative z-[1]">
         <div className="hero-wrap full-bleed">
-          <div className="hero-carousel full shadow-[0_14px_36px_rgba(0,0,0,.18)]
+          <div
+            className="hero-carousel full shadow-[0_14px_36px_rgba(0,0,0,.18)]
                             h-[220px] sm:h-[300px] md:h-[420px] overflow-hidden"
           >
             {heroImages.map((src, i) => (
@@ -310,7 +247,7 @@ export default function App() {
           Arte autoral, peças únicas e edição limitada.
         </p>
 
-        {/* DESTAQUES */}
+        {/* DESTAQUES – janela mais larga + imagens quadradas */}
         {!loading && featuredProducts.length > 0 && (
           <section
             id="destaques"
@@ -321,6 +258,7 @@ export default function App() {
             </h2>
 
             <div className="relative mt-8 px-2 sm:px-6 lg:px-10">
+              {/* setas */}
               {featuredProducts.length > VISIBLE_ITEMS && (
                 <>
                   <button
@@ -343,7 +281,9 @@ export default function App() {
                 </>
               )}
 
+              {/* faixa sobre o fundo colorido – agora ocupando quase a largura toda */}
               <div className="w-full rounded-[40px] bg-amber-50/85 backdrop-blur-[2px] shadow-[0_18px_40px_rgba(0,0,0,.18)] px-2 sm:px-4 py-10">
+                {/* janela do carrossel */}
                 <div className="overflow-hidden rounded-[28px]">
                   <div
                     ref={trackRef}
@@ -358,6 +298,7 @@ export default function App() {
                         className="flex-shrink-0 px-2 w-1/4"
                       >
                         <article className="h-full w-full flex flex-col rounded-[32px] bg-white shadow-[0_18px_40px_rgba(0,0,0,.16)] overflow-hidden">
+                          {/* imagem – QUADRADA */}
                           <div className="relative w-full aspect-square overflow-hidden">
                             <img
                               src={
@@ -369,6 +310,7 @@ export default function App() {
                             />
                           </div>
 
+                          {/* texto */}
                           <div className="border-t border-[#5c1524]/15 px-5 py-4 flex flex-col flex-1">
                             <h3 className="text-sm text-center text-slate-800 font-medium leading-snug line-clamp-2 min-h-[40px]">
                               {p.name}
