@@ -1,5 +1,6 @@
 import { API_BASE } from './api';
 import { validPrice } from './catalog';
+import { whatsappUrl } from '../config/store';
 
 export const money = (value) =>
   validPrice(value)
@@ -17,8 +18,7 @@ export const searchText = (value = '') =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase('pt-BR');
 export function contactUrl(product) {
-  const phone = import.meta.env.VITE_WHATSAPP_NUMBER || '9999999999999';
-  return `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Tenho interesse em: ${product.name}`)}`;
+  return whatsappUrl(`Tenho interesse em: ${product.name}`);
 }
 export function announceProducts() {
   localStorage.setItem('products:refresh', String(Date.now()));

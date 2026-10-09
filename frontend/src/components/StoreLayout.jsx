@@ -3,6 +3,8 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-
 import { FiArrowUpRight, FiMenu, FiSearch, FiArrowRight } from 'react-icons/fi';
 import { Button, Modal } from './ui';
 import { trackClick } from '../lib/analytics';
+import CartButton from './cart/CartButton';
+import CartFeedback from './cart/CartFeedback';
 
 export function Brand({ light = false }) {
   return (
@@ -91,6 +93,7 @@ function StoreHeader() {
             {links}
           </nav>
           <div className="header-actions">
+            <CartButton />
             <button
               className="icon-btn mobile-menu"
               onClick={() => setMenu(true)}
@@ -135,6 +138,7 @@ export default function StoreLayout({ children }) {
         Ir para o conteúdo
       </a>
       <StoreHeader />
+      <CartFeedback />
       <main id="main-content">{children}</main>
       <footer className="store-footer" id="contato">
         <div className="container footer-main">

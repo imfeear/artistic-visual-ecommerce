@@ -5,7 +5,7 @@ export function RouteFrame() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
     trackPageview(pathname);
-    document.title = `${pathname.startsWith('/admin') ? 'Estúdio' : pathname === '/catalogo' ? 'A loja' : pathname === '/login' ? 'Entrar' : pathname.startsWith('/produto/') ? 'Detalhes da peça' : 'Arte com origem'} | Aldo Sales`;
+    document.title = `${pathname.startsWith('/admin') ? 'Estúdio' : pathname === '/catalogo' ? 'A loja' : pathname === '/carrinho' ? 'Seu carrinho' : pathname === '/login' ? 'Entrar' : pathname.startsWith('/produto/') ? 'Detalhes da peça' : 'Arte com origem'} | Aldo Sales`;
     if (!hash) {
       window.scrollTo(0, 0);
       return;

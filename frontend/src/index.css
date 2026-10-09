@@ -3,4 +3,5 @@
 @import './styles/system.css';
 @import './styles/store.css';
 @import './styles/catalog.css';
+@import './styles/cart.css';
 @import './styles/admin.css';

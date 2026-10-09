@@ -4,6 +4,7 @@ import { Badge, ProductImage } from './ui';
 import { money, contactUrl } from '../lib/format';
 import { trackClick } from '../lib/analytics';
 import { availabilityOf, availabilityLabel, categoryLabel } from '../lib/catalog';
+import AddToCartButton from './cart/AddToCartButton';
 
 export default function ProductCard({ product, index = 0 }) {
   const status = availabilityOf(product);
@@ -52,6 +53,7 @@ export default function ProductCard({ product, index = 0 }) {
             </Link>
           )}
         </div>
+        <AddToCartButton product={product} />
       </div>
     </article>
   );
