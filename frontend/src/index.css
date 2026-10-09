@@ -1,0 +1,6 @@
+﻿@import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/system.css';
+@import './styles/store.css';
+@import './styles/catalog.css';
+@import './styles/admin.css';
