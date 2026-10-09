@@ -3,6 +3,8 @@ package com.ecommerce.ArtisticEcommerce.controller;
 import java.util.List;
 
 import com.ecommerce.ArtisticEcommerce.dto.ProductDto;
+import com.ecommerce.ArtisticEcommerce.dto.CatalogPage;
+import com.ecommerce.ArtisticEcommerce.dto.CatalogFilters;
 import com.ecommerce.ArtisticEcommerce.entity.Product;
 import com.ecommerce.ArtisticEcommerce.service.ProductService;
 
@@ -20,6 +22,23 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<Product>> list() { return ResponseEntity.ok(productService.findAll()); }
+
+    @GetMapping("/catalog")
+    public CatalogPage catalog(
+        @RequestParam(name = "busca", required = false) String search,
+        @RequestParam(name = "categoria", defaultValue = "") List<String> categories,
+        @RequestParam(name = "status", defaultValue = "") List<String> statuses,
+        @RequestParam(name = "material", defaultValue = "") List<String> materials,
+        @RequestParam(name = "min", required = false) Double min,
+        @RequestParam(name = "max", required = false) Double max,
+        @RequestParam(name = "ordem", defaultValue = "recent") String order,
+        @RequestParam(name = "pagina", defaultValue = "1") int page,
+        @RequestParam(name = "tamanho", defaultValue = "12") int size) {
+        return productService.catalog(search, categories, statuses, materials, min, max, order, page, size);
+    }
+
+    @GetMapping("/filters")
+    public CatalogFilters filters() { return productService.filters(); }
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> get(@PathVariable Long id) { return ResponseEntity.ok(productService.findById(id)); }

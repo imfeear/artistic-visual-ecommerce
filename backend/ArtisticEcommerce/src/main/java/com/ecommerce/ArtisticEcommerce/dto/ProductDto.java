@@ -1,6 +1,7 @@
 package com.ecommerce.ArtisticEcommerce.dto;
 
 import lombok.Data;
+import java.util.Set;
 
 @Data
 public class ProductDto {
@@ -9,7 +10,11 @@ public class ProductDto {
     private String description;
     private double price;
     private String imageUrl;
-    private boolean available;
+    private Boolean available;
+    private String category;
+    private String availability;
+    private Set<String> materials;
+    private Boolean featured;
 
 
 }

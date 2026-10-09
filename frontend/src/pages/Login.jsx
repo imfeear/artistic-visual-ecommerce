@@ -1,116 +1,126 @@
-import { useState } from "react";
-import { useAuth } from "../auth/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
-import { GoEye, GoEyeClosed, GoLock, GoPerson } from "react-icons/go";
+﻿import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiArrowRight, FiEye, FiEyeOff, FiLock, FiUser } from 'react-icons/fi';
+import { useAuth } from '../auth/useAuth';
+import { Brand } from '../components/StoreLayout';
+import { Badge, Button } from '../components/ui';
 
 export default function Login() {
   const { login, error, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/admin";
-  const [form, setForm] = useState({ username: "", password: "" });
+  const from = location.state?.from;
+  const destination = from ? `${from.pathname}${from.search || ''}` : '/admin';
+  const [form, setForm] = useState({ username: '', password: '' });
   const [show, setShow] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const disabled = submitting || loading || !form.username || !form.password;
-
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value }));
-  };
-
+  const change = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
   const submit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const ok = await login(form.username.trim(), form.password);
-      if (ok) navigate(from, { replace: true });
-      // se não ok, o AuthContext já preenche `error`
+      if (await login(form.username.trim(), form.password))
+        navigate(destination, { replace: true });
     } finally {
       setSubmitting(false);
     }
   };
-
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: "linear-gradient(180deg, #fff 0%, #fff 50%, #fff 60%)" }}
-    >
-      {/* camadas de cor (radiais) */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
-          backgroundImage: `
-            radial-gradient(1200px 700px at 12% 18%, var(--azul) 0 35%, transparent 36%),
-            radial-gradient(1000px 700px at 86% 22%, var(--ciano) 0 35%, transparent 36%),
-            radial-gradient(1100px 680px at 12% 88%, var(--amarelo) 0 38%, transparent 39%),
-            radial-gradient(900px 640px at 88% 84%, var(--rosa) 0 34%, transparent 35%)
-          `,
-          opacity: 0.22,
-        }}
-      />
-
-      <div className="w-full max-w-md rounded-2xl border border-black/10 shadow-[0_18px_50px_rgba(0,0,0,.18)] bg-white/80 backdrop-blur p-6">
-        <h1 className="text-xl font-semibold text-slate-900 mb-4">Entrar</h1>
-
-        <form onSubmit={submit} className="grid gap-3">
-          <label className="text-xs text-slate-600">Usuário</label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-slate-500">
-              <GoPerson />
-            </span>
-            <input
-              name="username"
-              value={form.username}
-              onChange={onChange}
-              placeholder="Usuário"
-              className="w-full rounded-lg border border-black/10 pl-9 pr-3 py-2 outline-none focus:border-slate-400"
-              autoFocus
-              autoComplete="username"
-            />
-          </div>
-
-          <label className="text-xs text-slate-600 mt-2">Senha</label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-slate-500">
-              <GoLock />
-            </span>
-            <input
-              name="password"
-              type={show ? "text" : "password"}
-              value={form.password}
-              onChange={onChange}
-              placeholder="Senha"
-              className="w-full rounded-lg border border-black/10 pl-9 pr-10 py-2 outline-none focus:border-slate-400"
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-2.5 text-slate-600 hover:text-slate-800"
-              onClick={() => setShow((s) => !s)}
-              aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+    <div className="studio-login">
+      <section className="login-campaign">
+        <Brand light />
+        <img
+          src="/images/pernambuco-editorial.webp"
+          alt="Composição artística original inspirada nas tradições de Pernambuco"
+        />
+        <div className="login-campaign-copy">
+          <p className="eyebrow">ALDO SALES / ESTÚDIO</p>
+          <h2>
+            O talento é seu.
+            <br />
+            <em>O mundo é o destino.</em>
+          </h2>
+          <p>
+            Um espaço para cuidar da sua arte
+            <br />e de todos os encontros que ela provoca.
+          </p>
+        </div>
+        <span className="login-campaign-footer">ORIGEM É O NOSSO PONTO DE PARTIDA.</span>
+      </section>
+      <main className="login-form-section">
+        <Link to="/" className="text-link login-return">
+          <FiArrowLeft /> Voltar para a loja
+        </Link>
+        <div className="login-form-card">
+          <Badge tone="purple">
+            <FiLock /> ÁREA ADMINISTRATIVA
+          </Badge>
+          <h1>
+            Bom ter
+            <br />
+            você por aqui.
+          </h1>
+          <p>Entre no seu estúdio e dê vida à sua coleção.</p>
+          <form onSubmit={submit}>
+            <label className="field" htmlFor="username">
+              Usuário
+              <div className="input-icon">
+                <FiUser />
+                <input
+                  id="username"
+                  name="username"
+                  value={form.username}
+                  onChange={change}
+                  autoComplete="username"
+                  placeholder="Seu usuário"
+                  required
+                  autoFocus
+                />
+              </div>
+            </label>
+            <label className="field" htmlFor="password">
+              Senha
+              <div className="input-icon">
+                <FiLock />
+                <input
+                  id="password"
+                  name="password"
+                  type={show ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={change}
+                  autoComplete="current-password"
+                  placeholder="Sua senha"
+                  required
+                />
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setShow((s) => !s)}
+                  aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {show ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+            </label>
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              busy={submitting || loading}
+              disabled={!form.username.trim() || !form.password}
             >
-              {show ? <GoEyeClosed /> : <GoEye />}
-            </button>
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-700 mt-1">
-              {String(error)}
-            </p>
-          )}
-
-          <button
-            disabled={disabled}
-            className="mt-3 w-full rounded-lg text-white py-2 font-medium shadow hover:opacity-95 disabled:opacity-60"
-            style={{ background: "linear-gradient(90deg, var(--laranja), var(--rosa))" }}
-          >
-            {submitting || loading ? "Entrando…" : "Entrar"}
-          </button>
-
-          <p className="text-[11px] text-slate-500 mt-2">Acesso restrito ao administrador.</p>
-        </form>
-      </div>
+              Entrar no estúdio <FiArrowRight />
+            </Button>
+          </form>
+          <p className="login-restriction">
+            <FiLock /> Acesso restrito ao administrador.
+          </p>
+        </div>
+        <footer>Aldo Sales · Feito de cultura. Feito para ficar.</footer>
+      </main>
     </div>
   );
 }

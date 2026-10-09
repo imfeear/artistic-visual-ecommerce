@@ -1,5 +1,13 @@
 package com.ecommerce.ArtisticEcommerce.entity;
 
+import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -30,5 +38,31 @@ public class Product {
     @Column(name = "image_url")     
     private String imageUrl;
     private boolean available;
+
+    // Nullable only for existing, unclassified products. API writes require an explicit category.
+    @Column(name = "category", length = 32)
+    private String category;
+    private String availability;
+    private Boolean featured;
+    private Instant createdAt;
+
+    @ElementCollection
+    @org.hibernate.annotations.BatchSize(size = 48)
+    @CollectionTable(name = "product_materials", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "material", length = 80)
+    private Set<String> materials = new LinkedHashSet<>();
+
+    public String getAvailability() {
+        return availability == null ? (available ? "available" : "sold-out") : availability;
+    }
+
+    public Boolean getFeatured() {
+        return Boolean.TRUE.equals(featured);
+    }
+
+    @PrePersist
+    void timestamp() {
+        if (createdAt == null) createdAt = Instant.now();
+    }
 
 }

@@ -1,284 +1,206 @@
-import { useEffect, useState } from "react";
-import { listCarouselAdmin, saveCarousel, uploadImage } from "../lib/api";
-import { useAuth } from "../auth/AuthContext";
+﻿import { useCallback, useState } from 'react';
+import { FiPlus, FiArrowUp, FiArrowDown, FiTrash2, FiUploadCloud, FiSave } from 'react-icons/fi';
+import { listCarouselAdmin, saveCarousel, uploadImage } from '../lib/api';
+import { useAuth } from '../auth/useAuth';
+import useResource from '../hooks/useResource';
+import { Button, Badge, EmptyState, Modal, ProductImage } from './ui';
 
-export default function CarouselModal({ open, onClose }) {
+function CarouselEditor({ onClose }) {
   const { auth } = useAuth();
-
-  const [items, setItems] = useState([
-    { url: "", position: 1, active: true },
-    { url: "", position: 2, active: true },
-    { url: "", position: 3, active: true },
-  ]);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState({}); // { [index]: boolean }
-  const [fileNames, setFileNames] = useState({}); // { [index]: string }
-
-  // ---- carregar itens quando abrir
-  useEffect(() => {
-    if (!open) return;
-    setLoading(true);
-    listCarouselAdmin(auth)
-      .then((data) => {
-        if (Array.isArray(data) && data.length) {
-          setItems(
-            data
-              .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
-              .map((d, i) => ({
-                url: d.url ?? "",
-                position: d.position ?? i + 1,
-                active: d.active ?? true,
-              }))
-          );
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [open, auth]);
-
-  const updateItem = (i, patch) => {
-    setItems((arr) => {
-      const copy = [...arr];
-      copy[i] = { ...copy[i], ...patch };
+  const [items, setItems] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState('');
+  const [error, setError] = useState('');
+  const loader = useCallback(async () => {
+    const data = await listCarouselAdmin(auth);
+    setItems(
+      (Array.isArray(data) ? data : [])
+        .sort((a, b) => (a.position || 0) - (b.position || 0))
+        .map((item) => ({ ...item, key: crypto.randomUUID() })),
+    );
+    return data;
+  }, [auth]);
+  const resource = useResource(loader);
+  const busy = saving || Boolean(uploading);
+  const change = (key, patch) =>
+    setItems((prev) => prev.map((item) => (item.key === key ? { ...item, ...patch } : item)));
+  const move = (index, dir) =>
+    setItems((prev) => {
+      const copy = [...prev];
+      [copy[index], copy[index + dir]] = [copy[index + dir], copy[index]];
       return copy;
     });
-  };
-
-  const addSlot = () =>
-    setItems((arr) => [...arr, { url: "", position: arr.length + 1, active: true }]);
-
-  const move = (i, dir) => {
-    const j = i + dir;
-    if (j < 0 || j >= items.length) return;
-    const copy = [...items];
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-    copy.forEach((x, idx) => (x.position = idx + 1));
-    setItems(copy);
-  };
-
-  // ---- upload por slot (com botão estilizado)
-  const onPickFile = async (i, file) => {
+  const upload = async (key, file) => {
     if (!file) return;
-    setFileNames((s) => ({ ...s, [i]: file.name }));
-    setUploading((s) => ({ ...s, [i]: true }));
+    setUploading(key);
+    setError('');
     try {
-      const up = await uploadImage(file, auth);
-      const url = up?.url || up?.path || up;
-      updateItem(i, { url });
-    } catch (e) {
-      alert("Falha no upload: " + (e?.message || e));
+      const result = await uploadImage(file, auth);
+      change(key, { url: result.url || result.path || result });
+    } catch (err) {
+      setError(`Falha no upload: ${err.message}`);
     } finally {
-      setUploading((s) => ({ ...s, [i]: false }));
+      setUploading('');
     }
   };
-
-  const clearUrl = (i) => {
-    updateItem(i, { url: "" });
-    setFileNames((s) => ({ ...s, [i]: "" }));
-  };
-
-  const onSave = async () => {
-    setLoading(true);
+  const save = async () => {
+    if (items.some((item) => !item.url?.trim())) {
+      setError('Adicione uma imagem a cada banner ou remova os espaços vazios.');
+      return;
+    }
+    setSaving(true);
+    setError('');
     try {
       await saveCarousel(
-        items.map((x, idx) => ({
-          url: x.url,
-          position: idx + 1,
-          active: !!x.active,
+        items.map((item, i) => ({
+          url: item.url.trim(),
+          position: i + 1,
+          active: Boolean(item.active),
         })),
-        auth
+        auth,
       );
-      localStorage.setItem("carousel:refresh", String(Date.now()));
-      onClose?.(true);
+      localStorage.setItem('carousel:refresh', String(Date.now()));
+      onClose(true);
+    } catch (err) {
+      setError(`Não foi possível salvar: ${err.message}`);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
-
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3">
-      <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
-        {/* Cabeçalho */}
-        <div className="flex items-center justify-between p-5 border-b border-black/10">
-          <h2 className="text-xl font-semibold">Editar carrossel</h2>
-          <button
-            onClick={() => onClose?.(false)}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200"
+    <Modal
+      open
+      onClose={() => onClose(false)}
+      busy={busy}
+      title="Editar carrossel"
+      description="Adicione imagens, organize a sequência e escolha o que fica visível."
+      className="carousel-dialog"
+    >
+      {resource.loading ? (
+        <div className="skeleton chart-skeleton" />
+      ) : resource.error ? (
+        <EmptyState
+          error
+          title="Não foi possível carregar os banners"
+          description={resource.error}
+          action={<Button onClick={resource.refresh}>Tentar novamente</Button>}
+        />
+      ) : (
+        <>
+          <div className="banner-editor-list">
+            {items.length === 0 && (
+              <EmptyState
+                title="Uma vitrine em branco"
+                description="Adicione a primeira imagem para começar."
+              />
+            )}
+            {items.map((item, i) => (
+              <div className="banner-editor-row" key={item.key}>
+                <div className="banner-editor-preview">
+                  {item.url ? (
+                    <ProductImage src={item.url} alt={`Prévia do banner ${i + 1}`} />
+                  ) : (
+                    <FiUploadCloud />
+                  )}
+                </div>
+                <div className="banner-editor-fields">
+                  <div className="banner-editor-title">
+                    <strong>Banner {String(i + 1).padStart(2, '0')}</strong>
+                    <Badge tone={item.active ? 'success' : 'neutral'}>
+                      {item.active ? 'Visível' : 'Oculto'}
+                    </Badge>
+                    <div className="banner-order">
+                      <button
+                        className="icon-btn"
+                        disabled={busy || i === 0}
+                        onClick={() => move(i, -1)}
+                        aria-label={`Subir banner ${i + 1}`}
+                      >
+                        <FiArrowUp />
+                      </button>
+                      <button
+                        className="icon-btn"
+                        disabled={busy || i === items.length - 1}
+                        onClick={() => move(i, 1)}
+                        aria-label={`Descer banner ${i + 1}`}
+                      >
+                        <FiArrowDown />
+                      </button>
+                      <button
+                        className="icon-btn danger-icon"
+                        disabled={busy}
+                        onClick={() => setItems((prev) => prev.filter((x) => x.key !== item.key))}
+                        aria-label={`Remover banner ${i + 1}`}
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </div>
+                  <label className="field">
+                    URL da imagem
+                    <input
+                      value={item.url || ''}
+                      onChange={(e) => change(item.key, { url: e.target.value })}
+                      disabled={busy}
+                      placeholder="https://… ou /uploads/…"
+                    />
+                  </label>
+                  <div className="banner-upload-row">
+                    <label className="upload-button">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={busy}
+                        onChange={(e) => upload(item.key, e.target.files?.[0])}
+                      />
+                      <FiUploadCloud />
+                      {uploading === item.key ? 'Enviando…' : 'Enviar imagem'}
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(item.active)}
+                        disabled={busy}
+                        onChange={(e) => change(item.key, { active: e.target.checked })}
+                      />
+                      Ativo
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() =>
+              setItems((prev) => [...prev, { key: crypto.randomUUID(), url: '', active: true }])
+            }
           >
-            Fechar
-          </button>
-        </div>
-
-        {/* Conteúdo */}
-        <div className="p-4">
-          {loading ? (
-            <div className="py-10 text-center text-slate-600">Carregando…</div>
-          ) : (
-            <>
-              <div className="space-y-4 max-h-[60vh] overflow-auto pr-1">
-                {items.map((it, i) => (
-                  <SlotRow
-                    key={i + (it.url || "")}
-                    i={i}
-                    item={it}
-                    uploading={!!uploading[i]}
-                    fileName={fileNames[i]}
-                    updateItem={updateItem}
-                    move={move}
-                    onPickFile={onPickFile}
-                    clearUrl={clearUrl}
-                  />
-                ))}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <button
-                  onClick={addSlot}
-                  className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200"
-                >
-                  Adicionar slot
-                </button>
-
-                <button
-                  onClick={onSave}
-                  disabled={loading}
-                  className="px-4 py-2 rounded-lg text-white font-medium shadow
-                             disabled:opacity-60"
-                  style={{ background: "linear-gradient(90deg, var(--laranja), var(--rosa))" }}
-                >
-                  {loading ? "Salvando…" : "Salvar carrossel"}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+            <FiPlus /> Adicionar banner
+          </Button>
+        </>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="dialog-actions">
+        <Button variant="secondary" disabled={busy} onClick={() => onClose(false)}>
+          Cancelar
+        </Button>
+        <Button
+          busy={saving}
+          disabled={resource.loading || Boolean(resource.error) || Boolean(uploading)}
+          onClick={save}
+        >
+          <FiSave /> Salvar carrossel
+        </Button>
       </div>
-    </div>
+    </Modal>
   );
 }
-
-/* ---------- Slot estilizado ---------- */
-function SlotRow({
-  i,
-  item,
-  uploading,
-  fileName,
-  updateItem,
-  move,
-  onPickFile,
-  clearUrl,
-}) {
-  const inputId = `file-slot-${i}`;
-
-  return (
-    <div className="rounded-xl border border-black/10 p-3 grid grid-cols-12 gap-3 bg-white/70">
-      {/* Preview */}
-      <div className="col-span-12 sm:col-span-3">
-        <div className="aspect-[16/10] rounded-lg border border-black/10 overflow-hidden bg-slate-50 flex items-center justify-center">
-          {item.url ? (
-            <img src={item.url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="text-xs text-slate-500">Sem imagem</div>
-          )}
-        </div>
-      </div>
-
-      {/* Campos e ações */}
-      <div className="col-span-12 sm:col-span-9 grid grid-cols-12 gap-2">
-        {/* URL */}
-        <div className="col-span-12">
-          <div className="flex gap-2">
-            <input
-              className="flex-1 border border-black/20 rounded-lg px-3 py-2"
-              placeholder="URL da imagem (ou envie um arquivo)"
-              value={item.url}
-              onChange={(e) => updateItem(i, { url: e.target.value })}
-            />
-            {item.url && (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3 py-2 rounded-lg border border-black/20 hover:bg-slate-50 text-sm"
-                title="Abrir imagem"
-              >
-                Abrir
-              </a>
-            )}
-            {item.url && (
-              <button
-                onClick={() => clearUrl(i)}
-                className="px-3 py-2 rounded-lg border border-black/20 hover:bg-slate-50 text-sm"
-                title="Limpar URL"
-              >
-                Remover
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Linha 2: Upload + toggle + ordenar */}
-        <div className="col-span-12 flex flex-wrap items-center gap-2">
-          {/* Botão de upload estilizado (input escondido) */}
-          <input
-            id={inputId}
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(e) => onPickFile(i, e.target.files?.[0])}
-          />
-          <label
-            htmlFor={inputId}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-black/20 bg-white hover:bg-slate-50 cursor-pointer text-sm shadow-sm"
-          >
-            {uploading ? (
-              <span className="animate-pulse">Enviando…</span>
-            ) : (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" className="opacity-70">
-                  <path fill="currentColor" d="M5 20q-.825 0-1.412-.587T3 18V8q0-.825.588-1.412T5 6h4l2 2h8q.825 0 1.413.588T21 10v8q0 .825-.587 1.413T19 20H5Z"/>
-                </svg>
-                {fileName ? "Trocar arquivo" : "Enviar imagem"}
-              </>
-            )}
-          </label>
-          {fileName && <span className="text-xs text-slate-600">({fileName})</span>}
-
-          {/* Toggle Ativo */}
-          <label className="ml-2 inline-flex items-center gap-2 text-sm select-none">
-            <span className="text-slate-700">Ativo</span>
-            <span className="relative inline-flex items-center">
-              <input
-                type="checkbox"
-                checked={!!item.active}
-                onChange={(e) => updateItem(i, { active: e.target.checked })}
-                className="sr-only peer"
-              />
-              <span className="w-10 h-5 rounded-full bg-slate-300 peer-checked:bg-emerald-500 transition-colors" />
-              <span className="absolute left-0 top-0 w-5 h-5 bg-white rounded-full shadow transform peer-checked:translate-x-5 transition-transform" />
-            </span>
-          </label>
-
-          {/* Ordenação */}
-          <div className="ml-auto flex gap-2">
-            <button
-              onClick={() => move(i, -1)}
-              className="px-2.5 py-1.5 rounded-lg border border-black/20 hover:bg-slate-50 text-sm"
-              title="Subir"
-            >
-              ↑
-            </button>
-            <button
-              onClick={() => move(i, +1)}
-              className="px-2.5 py-1.5 rounded-lg border border-black/20 hover:bg-slate-50 text-sm"
-              title="Descer"
-            >
-              ↓
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+export default function CarouselModal({ open, onClose }) {
+  return open ? <CarouselEditor onClose={onClose} /> : null;
 }

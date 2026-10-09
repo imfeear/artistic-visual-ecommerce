@@ -1,0 +1,284 @@
+/* Catalog controls share the storefront tokens and native, accessible inputs. */
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.catalog-sidebar {
+  border: 1px solid var(--border);
+  background: #fffdf9;
+  border-radius: var(--radius);
+  padding: 24px 20px;
+}
+.filter-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+.filter-heading svg {
+  color: var(--purple);
+  flex-shrink: 0;
+}
+.filter-heading h2 {
+  font-size: var(--text-lg);
+  line-height: 1.4;
+  letter-spacing: -0.4px;
+}
+.catalog-filter-fields fieldset {
+  border: 0;
+  min-width: 0;
+  margin: 24px 0 0;
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.catalog-filter-fields legend,
+.editor-materials legend {
+  font-size: var(--text-base);
+  font-weight: 750;
+  margin-bottom: 12px;
+}
+.catalog-check {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+  cursor: pointer;
+}
+.catalog-check input {
+  margin: 2px 0 0;
+}
+.catalog-check span {
+  overflow-wrap: anywhere;
+}
+.catalog-check:has(input:checked) {
+  color: var(--purple);
+  font-weight: 700;
+}
+.all-categories {
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: left;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+.all-categories:hover,
+.all-categories.is-selected {
+  color: var(--purple);
+  background: var(--purple-soft);
+  font-weight: 700;
+}
+.price-filter p,
+.filter-help,
+.editor-materials > p {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: var(--leading-body);
+}
+.price-filter-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.price-filter-inputs input {
+  width: 100%;
+  padding-inline: 10px;
+}
+.catalog-sidebar .price-filter-inputs {
+  grid-template-columns: minmax(0, 1fr);
+}
+.price-filter .btn {
+  width: 100%;
+  font-size: var(--text-sm);
+  padding-inline: 10px;
+}
+.price-filter .price-filter-error {
+  color: var(--danger);
+  margin-bottom: 12px;
+}
+.filter-footnote {
+  color: var(--muted);
+  font-family: var(--font-editorial);
+  font-size: var(--text-base);
+  font-style: italic;
+  padding-top: 24px;
+}
+.catalog-listing {
+  min-width: 0;
+}
+.catalog-listing .catalog-toolbar {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+.catalog-filter-trigger {
+  display: none;
+}
+.catalog-sort select {
+  width: 100%;
+  min-width: 0;
+}
+.catalog-search-help {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: var(--leading-body);
+  margin-top: 10px;
+}
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 26px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 9px 12px;
+  min-height: 40px;
+  border: 1px solid #ddd1ed;
+  border-radius: 8px;
+  color: #563385;
+  background: var(--purple-soft);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  text-align: left;
+  transition: background 0.2s;
+}
+.filter-chip:hover {
+  background: #e3d8f1;
+}
+.filter-chip span {
+  overflow-wrap: anywhere;
+}
+.filter-chip svg {
+  flex-shrink: 0;
+}
+.filter-count {
+  display: grid;
+  place-items: center;
+  background: var(--purple-soft);
+  color: var(--purple);
+  border-radius: 50%;
+  font-size: var(--text-xs);
+  min-width: 23px;
+  height: 23px;
+}
+.catalog-empty {
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #fffdf8, #f0eaf880);
+  padding: 46px 18px;
+}
+.catalog-empty .eyebrow {
+  margin: 0;
+}
+.catalog-empty .empty-state {
+  padding: 24px 0 0;
+}
+.catalog-empty .empty-state p {
+  max-width: 44ch;
+}
+.catalog-filter-dialog {
+  width: min(460px, calc(100% - 24px));
+}
+.catalog-filter-dialog .catalog-check {
+  font-size: var(--text-base);
+}
+.catalog-filter-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+  z-index: 2;
+}
+.catalog-filter-actions .btn {
+  font-size: var(--text-sm);
+  padding-inline: 8px;
+  gap: 6px;
+}
+.editor-materials {
+  min-width: 0;
+  margin: 24px 0 0;
+  padding: 20px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.material-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 10px 0 16px;
+  gap: 0 12px;
+}
+.editor-materials > .btn {
+  margin-top: 12px;
+  font-size: var(--text-sm);
+}
+@media (max-width: 1199px) {
+  .catalog-layout {
+    gap: 24px;
+    grid-template-columns: 232px minmax(0, 1fr);
+  }
+  .catalog-listing .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .catalog-listing .catalog-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 1023px) {
+  .catalog-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog-sidebar {
+    display: none;
+  }
+  .catalog-filter-trigger {
+    display: inline-flex;
+  }
+  .catalog-listing .catalog-toolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .catalog-listing .catalog-toolbar .search-field {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 479px) {
+  .catalog-listing .catalog-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog-filter-trigger {
+    justify-self: start;
+  }
+  .catalog-listing .product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog-filter-dialog .dialog-content {
+    padding: 22px 18px;
+  }
+  .catalog-listing .results-label {
+    align-items: start;
+    padding-block: 18px;
+    gap: 8px;
+  }
+  .catalog-listing .results-label .text-link {
+    padding-top: 0;
+  }
+}
