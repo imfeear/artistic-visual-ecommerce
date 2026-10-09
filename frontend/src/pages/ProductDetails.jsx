@@ -15,6 +15,7 @@ import { money, contactUrl } from '../lib/format';
 import { trackClick } from '../lib/analytics';
 import useResource from '../hooks/useResource';
 import { availabilityOf, availabilityLabel, categoryLabel, materialLabel } from '../lib/catalog';
+import AddToCartButton from '../components/cart/AddToCartButton';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -83,6 +84,7 @@ export default function ProductDetails() {
                   <strong>{money(product.price)}</strong>
                   <span>Consulte as condições diretamente com a loja.</span>
                 </div>
+                <AddToCartButton product={product} className="detail-add-to-cart" />
                 {availabilityOf(product) !== 'sold-out' ? (
                   <Button
                     href={contactUrl(product)}
